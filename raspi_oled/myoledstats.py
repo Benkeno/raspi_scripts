@@ -1,9 +1,7 @@
 #! /usr/bin/python
-# coding: utf-8
+# coding:utf-8
 
-# Display connected to PIN 5 and 6 (SCA, SCL) 
 import time
-
 
 import Adafruit_SSD1306
 
@@ -16,8 +14,16 @@ import subprocess
 # Raspberry Pi pin configuration:
 RST = None     # on the PiOLED this pin isnt used
 
-# 128x64 OLED I2C display with hardware I2C:
+
+# 128x64 display with hardware I2C:
 disp = Adafruit_SSD1306.SSD1306_128_64(rst=RST)
+
+# Note you can change the I2C address by passing an i2c_address parameter like:
+# disp = Adafruit_SSD1306.SSD1306_128_64(rst=RST, i2c_address=0x3C)
+
+# Alternatively you can specify an explicit I2C bus number, for example
+# with the 128x32 display you would use:
+# disp = Adafruit_SSD1306.SSD1306_128_32(rst=RST, i2c_bus=2)
 
 # Initialize library.
 disp.begin()
@@ -50,25 +56,27 @@ x = 0
 # Load default font.
 font = ImageFont.load_default()
 
-# Alternatively load a TTF font.  Make sure the .ttf font file is in the same directory as the python script!
+# Alternatively load a TTF font from an absolute path where the fonts lives !
 # Some other nice fonts to try: http://www.dafont.com/bitmap.php
-  #font = ImageFont.truetype('Boge.ttf', 8)
+fontH1 = ImageFont.truetype('/home/pi/myfonts/m20.ttf',13)
+fontH2 = ImageFont.truetype('/home/pi/myfonts/Lexie.ttf',12)
+fontH3 = ImageFont.truetype('/home/pi/myfonts/Lexie.ttf',10)
+
 
 while True:
 
     # Draw a black filled box to clear the image.
     draw.rectangle((0,0,width,height), outline=0, fill=0)
 
-    # Shell scripts for system monitoring from here : https://unix.stackexchange.com/questions/119126/command-to-display-memor>
-    
-    cmd = "hostname -a"                                                             # enter the command to 'terminal'
-    HOST = subprocess.check_output(cmd, shell = True )                              # save the output to variable 
-    cmd = "hostname -I | cut -d\' \' -f1"                                           # to get a specific value with cut awk etc..
+    # Shell scripts for system monitoring from here : https://unix.stackexchange.com/questions/119126/command-to-display-memory-usage-disk-usage-and-cpu-load
+    cmd = "hostname -a"                                                         # the command to read the value
+    HOST = subprocess.check_output(cmd, shell = True )                          # 
+    cmd = "hostname -I | cut -d\' \' -f1"
     #cmd = "hostname -I |cut -f 2 -d ' '"
     IP = subprocess.check_output(cmd, shell = True )
-    cmd = "top -bn1 | grep load | awk '{printf \"CPU USE: %.2f\", $(NF-2)}'"
+    cmd = "top -bn1 | grep load | awk '{printf \"CPU: %.2f%%\", $(NF-2)}'"
     CPU = subprocess.check_output(cmd, shell = True )
-    cmd = "free -m | awk 'NR==2{printf \"RAM: %s/%s MB %.2f%%\", $3,$2,$3*100/$2 }'"
+    cmd = "free -m | awk 'NR==2{printf \"RAM: %s/%s MB %d%%\", $3,$2,$3*100/$2 }'"
     MemUsage = subprocess.check_output(cmd, shell = True )
     cmd = "df -h | awk '$NF==\"/\"{printf \"DISK: %d/%d GB %s\", $3,$2,$5}'"
     Disk = subprocess.check_output(cmd, shell = True )
@@ -78,12 +86,12 @@ while True:
     MBOUT = subprocess.check_output(cmd, shell = True )
 
     # Write lines of text.
-    draw.text((x, top+1),       "HOST: " + str(HOST,'utf-8'),  font=font, fill=255)
-    draw.text((x, top+12),  "IP: " + str(IP,'utf-8'), font=font, fill=255)
-    draw.text((x, top+22),  str(CPU,'utf-8') + " " + str(temp,'utf-8') , font=font, fill=255)
-    draw.text((x, top+32), str(MemUsage,'utf-8'), font=font, fill=255)
-    draw.text((x, top+42), str(Disk,'utf-8'), font=font, fill=255)
-    draw.text((x, top+52), "NET: " + str(MBOUT,'utf-8'), font=font, fill=255)
+    draw.text((x+1, top+2),   "HOST: " + str(HOST,'utf-8'),  font=fontH1, fill=255)
+    draw.text((x+1, top+19),  "IP: " + str(IP,'utf-8'), font=fontH2, fill=255)
+    draw.text((x+1, top+31),  str(CPU,'utf-8') + " " + str(temp,'utf-8') , font=fontH3, fill=255)
+    #draw.text((x, top+36), str(MemUsage,'utf-8'), font=fontH3, fill=255)
+    draw.text((x+1, top+42), str(Disk,'utf-8'), font=fontH3, fill=255)
+    draw.text((x+1, top+53), "NET: " + str(MBOUT,'utf-8'), font=fontH3, fill=255)
     #draw.text((x, top+16),    str(MemUsage),  font=font, fill=255)
     #draw.text((x, top+25),    str(Disk),  font=font, fill=255)
 
@@ -91,4 +99,3 @@ while True:
     disp.image(image)
     disp.display()
     time.sleep(.1)
-
