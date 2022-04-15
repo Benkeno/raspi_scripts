@@ -1,7 +1,7 @@
 
 # Raspi Monitoring
 
-Display Hardware Stats from the Pi on a tiny OLED Display and shutdown/wakeup with a button.
+Display Hardware Values from the Pi on a tiny OLED Display and shutdown/wakeup with a button.
 
 
 ## Documentation
