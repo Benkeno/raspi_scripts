@@ -1,9 +1,11 @@
 #! /usr/bin/python
 # coding:utf-8
 
+
 import time
 
 import Adafruit_SSD1306
+
 
 from PIL import Image
 from PIL import ImageDraw
@@ -13,6 +15,7 @@ import subprocess
 
 # Raspberry Pi pin configuration:
 RST = None     # on the PiOLED this pin isnt used
+
 
 
 # 128x64 display with hardware I2C:
@@ -61,6 +64,8 @@ font = ImageFont.load_default()
 fontH1 = ImageFont.truetype('/home/pi/myfonts/m20.ttf',13)
 fontH2 = ImageFont.truetype('/home/pi/myfonts/Lexie.ttf',12)
 fontH3 = ImageFont.truetype('/home/pi/myfonts/Lexie.ttf',10)
+fontH4 = ImageFont.truetype('/home/pi/myfonts/Happyhell.ttf',12)
+
 
 
 while True:
@@ -69,32 +74,38 @@ while True:
     draw.rectangle((0,0,width,height), outline=0, fill=0)
 
     # Shell scripts for system monitoring from here : https://unix.stackexchange.com/questions/119126/command-to-display-memory-usage-disk-usage-and-cpu-load
-    cmd = "hostname -a"                                                         # the command to read the value
+    cmd = "hostname -a"                                                         # the command to read the value hostname 
     HOST = subprocess.check_output(cmd, shell = True )                          # 
     cmd = "hostname -I | cut -d\' \' -f1"
     #cmd = "hostname -I |cut -f 2 -d ' '"
     IP = subprocess.check_output(cmd, shell = True )
-    cmd = "top -bn1 | grep load | awk '{printf \"CPU: %.2f%%\", $(NF-2)}'"
-    CPU = subprocess.check_output(cmd, shell = True )
-    cmd = "free -m | awk 'NR==2{printf \"RAM: %s/%s MB %d%%\", $3,$2,$3*100/$2 }'"
-    MemUsage = subprocess.check_output(cmd, shell = True )
+    #cmd = "top -bn1 | grep load | awk '{printf \"CPU: %.2f%%\", $(NF-2)}'"
+    #CPU = subprocess.check_output(cmd, shell = True )
+    #cmd = "free -m | awk 'NR==2{printf \"RAM: %s/%s MB %d%%\", $3,$2,$3*100/$2 }'"
+    #MemUsage = subprocess.check_output(cmd, shell = True )
     cmd = "df -h | awk '$NF==\"/\"{printf \"DISK: %d/%d GB %s\", $3,$2,$5}'"
     Disk = subprocess.check_output(cmd, shell = True )
     cmd = "vcgencmd measure_temp |cut -f 2 -d '='"
     temp = subprocess.check_output(cmd, shell = True )
-    cmd =  "vnstat -ru 1 --oneline | cut -f7 -d ';'"
-    MBOUT = subprocess.check_output(cmd, shell = True )
+    #cmd =  "vnstat -ru 1 --oneline | cut -f7 -d ';'"
+    cmd = "vnstat -tr 2 --json | cut -f20 -d \'\"' "
+    Rx = subprocess.check_output(cmd, shell = True )
+    cmd = "vnstat -tr 2 --json | cut -f34 -d \'\"' "
+    Tx = subprocess.check_output(cmd, shell = True )
 
     # Write lines of text.
-    draw.text((x+1, top+2),   "HOST: " + str(HOST,'utf-8'),  font=fontH1, fill=255)
+    draw.text((x+18, top+2),    str(HOST,'utf-8'),  font=fontH1, fill=255)
     draw.text((x+1, top+19),  "IP: " + str(IP,'utf-8'), font=fontH2, fill=255)
-    draw.text((x+1, top+31),  str(CPU,'utf-8') + " " + str(temp,'utf-8') , font=fontH3, fill=255)
+    #draw.text((x+1, top+31),  str(CPU,'utf-8') + " " + str(temp,'utf-8') , font=fontH3, fill=255)
+    draw.text((x+95, top+5), str(temp,'utf-8') , font=fontH3, fill=255)
     #draw.text((x, top+36), str(MemUsage,'utf-8'), font=fontH3, fill=255)
-    draw.text((x+1, top+42), str(Disk,'utf-8'), font=fontH3, fill=255)
-    draw.text((x+1, top+53), "NET: " + str(MBOUT,'utf-8'), font=fontH3, fill=255)
+    draw.text((x+1, top+32), str(Disk,'utf-8'), font=fontH3, fill=255)
+    draw.text((x+1, top+43), "Rx: " + str(Rx,'utf-8'), font=fontH3, fill=255)
+    draw.text((x+1, top+54), "Tx: " + str(Tx,'utf-8'), font=fontH3, fill=255)
     #draw.text((x, top+16),    str(MemUsage),  font=font, fill=255)
     #draw.text((x, top+25),    str(Disk),  font=font, fill=255)
-
+ 
+ 
     # Display image.
     disp.image(image)
     disp.display()
